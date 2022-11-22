@@ -2227,7 +2227,7 @@ in that file."
 				 (recs (file-name-sans-extension fqn)))))
 	           path)
 	    ))
-    (recs fqn)))
+    (replace-regexp-in-string "_build/default" "" (recs fqn) nil 'literal)))
 
 (defun company-coq--loc-fully-qualified-name-old (fqn)
   "Find source file for fully qualified name FQN."
