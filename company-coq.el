@@ -2166,6 +2166,8 @@ Returns the corresponding (logical name . real name) pair."
                      (setq longest (cons logical real)))
            finally return longest))
 
+;; reimplement this completely using the locate then repeated locate-lib approach
+;; recursion here https://stackoverflow.com/questions/13356001/recursion-in-lambda-in-elisp
 (defun company-coq-library-path (lib-path mod-name fallback-spec)
   "Find a .v file likely to hold the definition of (LIB-PATH MOD-NAME).
 May also return a buffer visiting that file.  FALLBACK-SPEC is a
@@ -2179,6 +2181,7 @@ to a non-existent file (for an example of such a case, try
                     (equal (concat mod-name ".v")
                            (file-name-nondirectory (buffer-file-name proof-script-buffer))))))
       proof-script-buffer
+    (message "lib-path mod-name lib-name %s %s %s" lib-path mod-name (concat lib-path mod-name))
     (let* ((lib-name (concat lib-path mod-name))
            (output   (company-coq-ask-prover-swallow-errors (format company-coq-locate-lib-cmd lib-name)))
            (path     (or (and output (save-match-data
@@ -2207,7 +2210,9 @@ in that file."
 
 (defun company-coq--loc-fully-qualified-name (fqn)
   "Find source file for fully qualified name FQN."
-  (let* ((spec (company-coq-longest-matching-path-spec fqn))
+  (message "fqn %s" fqn)
+  (message "fqn %s" (file-name-sans-extension fqn))
+  (let* ((spec (company-coq-longest-matching-path-spec fqn)) ;; remove this and instead split fqn and do locate library
          (logical (if spec (concat (car spec) ".") ""))
          (mod-name (replace-regexp-in-string "\\..*\\'" "" fqn nil nil nil (length logical))))
     (company-coq-library-path logical mod-name spec)))
