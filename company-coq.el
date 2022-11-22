@@ -2215,7 +2215,7 @@ in that file."
                       (t (recs (+ a b) a acc)))))
     (recs 2 1 0)))
 
-(defun company-coq--loc-fully-qualified-name-aux (fqn)
+(defun company-coq--loc-fully-qualified-name (fqn)
   (cl-labels
       ((recs (fqn)
 	    (message "fqn-loc %s" fqn)
@@ -2224,11 +2224,12 @@ in that file."
 					       (when (and (string-match company-coq-locate-lib-output-format output)
 							  (string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
 						 (concat (match-string-no-properties 2 output) ".v"))))
-				 (recs (file-name-sans-extension fqn))))
-		   (stripped (replace-regexp-in-string "_build/default" "" path nil 'literal))))))
+				 (recs (file-name-sans-extension fqn)))))
+	           path)
+	    ))
     (recs fqn)))
 
-(defun company-coq--loc-fully-qualified-name (fqn)
+(defun company-coq--loc-fully-qualified-name-old (fqn)
   "Find source file for fully qualified name FQN."
   (message "fqn %s" fqn)
   (message "fib %s" (sum-fibonacci))
