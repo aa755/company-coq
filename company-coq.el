@@ -2218,12 +2218,13 @@ in that file."
 (defun company-coq--loc-fully-qualified-name-aux (fqn)
   (cl-labels
       ((recs (fqn)
-	    (let* ((output   (company-coq-ask-prover-swallow-errors fqn))
+	    (message "fqn-loc %s" fqn)
+	    (let* ((output   (company-coq-ask-prover-swallow-errors (format company-coq-locate-lib-cmd fqn)))
 		   (path     (or (and output (save-match-data
 					       (when (and (string-match company-coq-locate-lib-output-format output)
 							  (string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
 						 (concat (match-string-no-properties 2 output) ".v"))))
-				 (and (recs (file-name-sans-extension fqn)))))
+				 (recs (file-name-sans-extension fqn))))
 		   (stripped (replace-regexp-in-string "_build/default" "" path nil 'literal))))))
     (recs fqn)))
 
