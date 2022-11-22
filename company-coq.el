@@ -2192,7 +2192,7 @@ to a non-existent file (for an example of such a case, try
            (stripped (replace-regexp-in-string "_build/default" "" path nil 'literal)))
            (if (file-exists-p stripped)
                stripped
-             path
+;;             path
    ))))
 
 (defun company-coq--locate-name (name functions)
@@ -2208,10 +2208,30 @@ in that file."
   "Create a regexp matching HEADERS followed by a name."
   (concat "\\`" (regexp-opt headers) "\\_>[\n[:space:]]+" "\\(" company-coq-symbol-regexp "\\)"))
 
+(defun sum-fibonacci ()
+  (cl-labels ((recs (a b acc)
+                (cond ((>= a 4) acc)
+                      ((evenp a) (recs (+ a b) a (+ a acc)))
+                      (t (recs (+ a b) a acc)))))
+    (recs 2 1 0)))
+
+(defun company-coq--loc-fully-qualified-name-aux (fqn)
+  (cl-labels
+      ((recs (fqn)
+	    (let* ((output   (company-coq-ask-prover-swallow-errors fqn))
+		   (path     (or (and output (save-match-data
+					       (when (and (string-match company-coq-locate-lib-output-format output)
+							  (string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
+						 (concat (match-string-no-properties 2 output) ".v"))))
+				 (and (recs (file-name-sans-extension fqn)))))
+		   (stripped (replace-regexp-in-string "_build/default" "" path nil 'literal))))))
+    (recs fqn)))
+
 (defun company-coq--loc-fully-qualified-name (fqn)
   "Find source file for fully qualified name FQN."
   (message "fqn %s" fqn)
-  (message "fqn %s" (file-name-sans-extension fqn))
+  (message "fib %s" (sum-fibonacci))
+  (message "fqn %s is in file %s" fqn (company-coq--loc-fully-qualified-name-aux fqn))
   (let* ((spec (company-coq-longest-matching-path-spec fqn)) ;; remove this and instead split fqn and do locate library
          (logical (if spec (concat (car spec) ".") ""))
          (mod-name (replace-regexp-in-string "\\..*\\'" "" fqn nil nil nil (length logical))))
