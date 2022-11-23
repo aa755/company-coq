@@ -2373,6 +2373,7 @@ FQN-FUNCTIONS: see `company-coq-locate-internal'."
    (t (user-error "Not found: %S" location)))
   (company-coq-search-then-scroll-up target fallback #'company-coq--pulse-and-recenter))
 
+;; top level entry point for jump-to-definition. how is fqn-functions specified?
 (defun company-coq-jump-to-definition (name &optional fqn-functions)
   "Jump to the definition of NAME, using FQN-FUNCTIONS to find it.
 Interactively, use the identifier at point."
