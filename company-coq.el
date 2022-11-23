@@ -2166,35 +2166,6 @@ Returns the corresponding (logical name . real name) pair."
                      (setq longest (cons logical real)))
            finally return longest))
 
-;; reimplement this completely using the locate then repeated locate-lib approach
-;; recursion here https://stackoverflow.com/questions/13356001/recursion-in-lambda-in-elisp
-(defun company-coq-library-path (lib-path mod-name fallback-spec)
-  "Find a .v file likely to hold the definition of (LIB-PATH MOD-NAME).
-May also return a buffer visiting that file.  FALLBACK-SPEC is a
-module path specification to be used if [Locate Library] points
-to a non-existent file (for an example of such a case, try
-\[Locate Library Peano] in 8.4pl3)."
-  (if (and (equal lib-path "")
-           proof-script-buffer
-           (or (equal mod-name "Top")
-               (and (buffer-file-name proof-script-buffer)
-                    (equal (concat mod-name ".v")
-                           (file-name-nondirectory (buffer-file-name proof-script-buffer))))))
-      proof-script-buffer
-    (message "lib-path mod-name lib-name %s %s %s" lib-path mod-name (concat lib-path mod-name))
-    (let* ((lib-name (concat lib-path mod-name))
-           (output   (company-coq-ask-prover-swallow-errors (format company-coq-locate-lib-cmd lib-name)))
-           (path     (or (and output (save-match-data
-                                       (when (and (string-match company-coq-locate-lib-output-format output)
-                                                  (string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
-                                         (concat (match-string-no-properties 2 output) ".v"))))
-                         (and fallback-spec (expand-file-name (concat mod-name ".v") (cdr fallback-spec)))))
-           (stripped (replace-regexp-in-string "_build/default" "" path nil 'literal)))
-           (if (file-exists-p stripped)
-               stripped
-;;             path
-   ))))
-
 (defun company-coq--locate-name (name functions)
   "Find location of NAME using FUNCTIONS.
 FUNCTIONS are called successively with NAME until one of them
@@ -2228,16 +2199,6 @@ in that file."
 	           path)
 	    ))
     (replace-regexp-in-string "_build/default" "" (recs fqn) nil 'literal)))
-
-(defun company-coq--loc-fully-qualified-name-old (fqn)
-  "Find source file for fully qualified name FQN."
-  (message "fqn %s" fqn)
-  (message "fib %s" (sum-fibonacci))
-  (message "fqn %s is in file %s" fqn (company-coq--loc-fully-qualified-name-aux fqn))
-  (let* ((spec (company-coq-longest-matching-path-spec fqn)) ;; remove this and instead split fqn and do locate library
-         (logical (if spec (concat (car spec) ".") ""))
-         (mod-name (replace-regexp-in-string "\\..*\\'" "" fqn nil nil nil (length logical))))
-    (company-coq-library-path logical mod-name spec)))
 
 (defun company-coq--fqn-with-regexp-1 (name cmd-format response-format)
   "Find qualified name of NAME using CMD-FORMAT and RESPONSE-FORMAT."
@@ -2363,6 +2324,7 @@ FQN-FUNCTIONS: see `company-coq-locate-internal'."
 
 (defun company-coq-jump-to-definition-1 (target location fallback)
   "Jump to TARGET in LOCATION.  If not found, jump to FALLBACK."
+  (message "jump target is %s" target)
   (cond
    ((bufferp location)
     (company-coq--save-location)
