@@ -2179,25 +2179,19 @@ in that file."
   "Create a regexp matching HEADERS followed by a name."
   (concat "\\`" (regexp-opt headers) "\\_>[\n[:space:]]+" "\\(" company-coq-symbol-regexp "\\)"))
 
-(defun sum-fibonacci ()
-  (cl-labels ((recs (a b acc)
-                (cond ((>= a 4) acc)
-                      ((evenp a) (recs (+ a b) a (+ a acc)))
-                      (t (recs (+ a b) a acc)))))
-    (recs 2 1 0)))
-
 (defun company-coq--loc-fully-qualified-name (fqn)
   (cl-labels
       ((recs (fqn)
-	    (message "fqn-loc %s" fqn)
-	    (let* ((output   (company-coq-ask-prover-swallow-errors (format company-coq-locate-lib-cmd fqn)))
-		   (path     (or (and output (save-match-data
-					       (when (and (string-match company-coq-locate-lib-output-format output)
-							  (string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
-						 (concat (match-string-no-properties 2 output) ".v"))))
-				 (recs (file-name-sans-extension fqn)))))
-	           path)
-	    ))
+	     (message "fqn-loc %s" fqn)
+	     (let* ((output (company-coq-ask-prover-swallow-errors (format company-coq-locate-lib-cmd fqn)))
+		    (path (or (and output
+				   (save-match-data
+				     (when (and (string-match company-coq-locate-lib-output-format output)
+						(string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
+				       (concat (match-string-no-properties 2 output) ".v"))))
+			      (recs (file-name-sans-extension fqn)))))
+	       path)
+	     ))
     (replace-regexp-in-string "_build/default" "" (recs fqn) nil 'literal)))
 
 (defun company-coq--fqn-with-regexp-1 (name cmd-format response-format)
@@ -2335,7 +2329,7 @@ FQN-FUNCTIONS: see `company-coq-locate-internal'."
    (t (user-error "Not found: %S" location)))
   (company-coq-search-then-scroll-up target fallback #'company-coq--pulse-and-recenter))
 
-;; top level entry point for jump-to-definition. how is fqn-functions specified?
+;; top level entry point for jump-to-definition.
 (defun company-coq-jump-to-definition (name &optional fqn-functions)
   "Jump to the definition of NAME, using FQN-FUNCTIONS to find it.
 Interactively, use the identifier at point."
