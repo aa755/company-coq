@@ -2211,8 +2211,10 @@ in that file."
 Returns a cons as specified by `company-coq--locate-name'."
   (-when-let* ((fqn (company-coq--fqn-with-regexp name cmd-format response-headers))
                (loc (company-coq--loc-fully-qualified-name fqn))
+	       (vfile (concat (replace-regexp-in-string "_build/default" "" (car loc) nil 'literal) ".v"))
+	       (globfile (concat (car loc) ".glob"))
                (short-name (replace-regexp-in-string "\\`.*\\." "" fqn)))
-    (cons (concat (car loc) ".v") 17524)))
+    (cons vfile 17524)))
 
 (defun company-coq--loc-symbol (symbol)
   "Find the location of SYMBOL."
