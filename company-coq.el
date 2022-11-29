@@ -2188,11 +2188,12 @@ in that file."
 				   (save-match-data
 				     (when (and (string-match company-coq-locate-lib-output-format output)
 						(string-match-p company-coq-compiled-regexp (match-string-no-properties 3 output)))
-				       (concat (match-string-no-properties 2 output) ".v"))))
-			      (recs (file-name-sans-extension fqn)))))
+				       (cons (match-string-no-properties 2 output) fqn))))
+			      (recs (file-name-sans-extension fqn))))) ;; before recursion, check that the new fqn is smaller, to avoid inf loops
 	       path)
 	     ))
-    (replace-regexp-in-string "_build/default" "" (recs fqn) nil 'literal)))
+    (recs fqn)));; do if file exists as it was done before
+;; (replace-regexp-in-string "_build/default" "" (recs fqn) nil 'literal)
 
 (defun company-coq--fqn-with-regexp-1 (name cmd-format response-format)
   "Find qualified name of NAME using CMD-FORMAT and RESPONSE-FORMAT."
@@ -2211,7 +2212,7 @@ Returns a cons as specified by `company-coq--locate-name'."
   (-when-let* ((fqn (company-coq--fqn-with-regexp name cmd-format response-headers))
                (loc (company-coq--loc-fully-qualified-name fqn))
                (short-name (replace-regexp-in-string "\\`.*\\." "" fqn)))
-    (cons loc 17524)))
+    (cons (concat (car loc) ".v") 17524)))
 
 (defun company-coq--loc-symbol (symbol)
   "Find the location of SYMBOL."
