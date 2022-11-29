@@ -2206,6 +2206,12 @@ in that file."
   "Find qualified name of NAME using CMD-FORMAT and RESPONSE-HEADERS."
   (company-coq--fqn-with-regexp-1 name cmd-format (company-coq--loc-output-regexp response-headers)))
 
+(defun company-coq--loc-from-globfile (globfile relative_fqn)
+  "Find qualified name of NAME using CMD-FORMAT and RESPONSE-HEADERS."
+  (message "looking for %s in globfile %s" relative_fqn globfile)
+  17524
+  )
+
 (defun company-coq--loc-with-regexp (name cmd-format response-headers)
   "Find location of NAME using CMD-FORMAT and RESPONSE-HEADERS.
 Returns a cons as specified by `company-coq--locate-name'."
@@ -2213,8 +2219,10 @@ Returns a cons as specified by `company-coq--locate-name'."
                (loc (company-coq--loc-fully-qualified-name fqn))
 	       (vfile (concat (replace-regexp-in-string "_build/default" "" (car loc) nil 'literal) ".v"))
 	       (globfile (concat (car loc) ".glob"))
+	       (vfile_fqn (cdr loc))
+	       (relative_fqn (substring fqn (length vfile_fqn)))
                (short-name (replace-regexp-in-string "\\`.*\\." "" fqn)))
-    (cons vfile 17524)))
+    (cons vfile (company-coq--loc-from-globfile globfile relative_fqn))))
 
 (defun company-coq--loc-symbol (symbol)
   "Find the location of SYMBOL."
