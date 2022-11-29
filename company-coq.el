@@ -2211,8 +2211,7 @@ Returns a cons as specified by `company-coq--locate-name'."
   (-when-let* ((fqn (company-coq--fqn-with-regexp name cmd-format response-headers))
                (loc (company-coq--loc-fully-qualified-name fqn))
                (short-name (replace-regexp-in-string "\\`.*\\." "" fqn)))
-    (cons loc (concat (company-coq-make-headers-regexp response-headers)
-                      "\\s-*\\(" (regexp-quote short-name) "\\)\\_>"))))
+    (cons loc 17524)))
 
 (defun company-coq--loc-symbol (symbol)
   "Find the location of SYMBOL."
