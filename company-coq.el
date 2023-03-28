@@ -413,7 +413,7 @@ The result matches any symbol in HEADERS, followed by BODY."
   (concat "^[[:blank:]]*\\_<\\(" (regexp-opt headers) "\\)\\_>"
           (when body (concat "\\s-*\\(" body "\\)"))))
 
-(defconst company-coq-definitions-kwds-globfile `("def" "ind" "constr" "prf");; add regexp-opt here
+(defconst company-coq-definitions-kwds-globfile `("def" "ind" "constr" "prf" "ax");; add regexp-opt here
   "Keywords that introduce a definition in a .glob file.")
 
 (defun company-coq-make-headers-regexp-glob (body)
@@ -2095,7 +2095,7 @@ KILL: See `quit-window'."
     (setq fallback (concat "\\_<\\(?2:" (regexp-quote fallback) "\\)\\_>\\s-*:[^=]")))
   (save-excursion
     (if (or (and (number-or-marker-p target)
-                 (goto-char target))
+                 (goto-char (byte-to-position target)))
             (and (stringp target)
                  (goto-char (point-min))
                  (or (re-search-forward target nil t)
@@ -2260,7 +2260,7 @@ Returns a cons as specified by `company-coq--locate-name'."
 
 (defun company-coq--loc-symbol (symbol)
   "Find the location of SYMBOL."
-  (company-coq--loc-with-regexp symbol "Locate %s." `("Notation" "Constant" ,@company-coq-definitions-kwds)))
+  (company-coq--loc-with-regexp symbol "Locate %s." `("Notation",@company-coq-definitions-kwds)))
 
 (defun company-coq--loc-tactic (tactic)
   "Find the location of TACTIC."
@@ -2276,6 +2276,17 @@ Returns a cons as specified by `company-coq--locate-name'."
      fqn
      (concat (company-coq-make-headers-regexp '("Inductive" "CoInductive" "Variant"))
 	     "\\s-*\\(" (regexp-quote itype) "\\)\\_>"));; it is hard to find the declaration of a constructor because there is no leading marker unlike declaration of Inductives. so we locate the inductive. of course, if the .glob file is available, this is ignored anyway
+    ))
+
+(defun company-coq--loc-constant-or-spec (name)
+  "Find the location of a constant (including specs)."
+  (-when-let* ((fqn (company-coq--fqn-with-regexp name "Locate %s." '("Constant"))))
+    (company-coq--loc-fqn-with-regexp
+     fqn
+     (concat "\\(" (company-coq-make-headers-regexp company-coq-definitions-kwds) "\\|"
+	     "Specify" "\\s-*" "\"[^\"]+\"" "\\s-*" "as" "\\s-*"
+	     "\\)"
+	     "\\s-*\\(" (regexp-quote name) "\\)\\_>"))
     ))
 
 (defun company-coq--loc-field (field)
@@ -2385,7 +2396,9 @@ Interactively, use the identifier at point."
   (unless fqn-functions
     (setq fqn-functions (list #'company-coq--loc-module #'company-coq--loc-tactic
                               #'company-coq--loc-field #'company-coq--loc-symbol
-                              #'company-coq--loc-constructor)))
+                              #'company-coq--loc-constructor
+                              #'company-coq--loc-constant-or-spec
+			      )))
   (company-coq-locate-internal name fqn-functions #'company-coq-jump-to-definition-1 t))
 
 (defun company-coq-make-title-line (face &optional skip-space)
